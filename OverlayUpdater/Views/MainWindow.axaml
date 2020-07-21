@@ -3,23 +3,28 @@
         xmlns:vm="clr-namespace:OverlayUpdater.ViewModels;assembly=OverlayUpdater"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
         x:Class="OverlayUpdater.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="OverlayUpdater">
+        Title="OverlayUpdater"
+        Width="400"
+        Height="200">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-  <Grid ColumnDefinitions="1*,11*" RowDefinitions="Auto,Auto"  Margin="4">
-    <Button x:Name="SelectButton" Command="{Binding SelectClickCommand}" Grid.Column="0" Grid.Row="0">Select JSON File</Button>
-    <TextBox Text="{Binding JsonPath}" Margin="0 0 5 0" Grid.Column="1" Grid.Row="0"  IsReadOnly="True" />
-
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="2" Grid.Row="1"/>
-  </Grid>
-
+    <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="4 4 4 0">
+      <Button Margin="4" Command="{Binding SelectClickCommand}" Grid.Column="0" Grid.Row="0">Select JSON File</Button>
+      <TextBox Margin="4" Text="{Binding JsonPath}" Grid.Column="1" Grid.Row="0"  IsReadOnly="True" />
+      <TextBlock Margin="4" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">Title:</TextBlock>
+      <TextBox Margin="4" Text="{Binding Title}" Grid.Column="1" Grid.Row="1" />
+      <TextBlock Margin="4" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">Subtitle:</TextBlock>
+      <TextBox Margin="4" Text="{Binding Subtitle}" Grid.Column="1" Grid.Row="2" />
+      <TextBlock Margin="4" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center">Max:</TextBlock>
+      <NumericUpDown Margin="4" Value="{Binding Max}" Grid.Column="1" Grid.Row="3" Minimum="0" />
+      <TextBlock Margin="4" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center">Current:</TextBlock>
+      <NumericUpDown Margin="4" Value="{Binding Current}" Grid.Column="1" Grid.Row="4" Minimum="0" />
+    </Grid>
     
-
-
 </Window>
