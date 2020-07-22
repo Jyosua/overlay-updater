@@ -1,12 +1,7 @@
-﻿using Avalonia.Controls;
-using Avalonia.Remote.Protocol.Designer;
-using Newtonsoft.Json;
-using OverlayUpdater.Models;
+﻿using Microsoft.AspNetCore.StaticFiles;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.IO;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace OverlayUpdater.Services
@@ -14,8 +9,9 @@ namespace OverlayUpdater.Services
     public class WebHostService
     {
         private bool shutdown = true;
+        public bool ServerRunning => !shutdown;
 
-        public async Task Start(ProgressBarJSON json)
+        public async Task Start(string folderPath)
         {
             shutdown = false;
             var url = "http://localhost:8017/";
@@ -24,13 +20,13 @@ namespace OverlayUpdater.Services
             listener.Start();
             Console.WriteLine("Listening for connections on {0}", url);
 
-            await HandleRequests(listener, json);
+            await HandleRequests(listener, folderPath);
 
             // Close the listener
             listener.Close();
         }
 
-        private async Task HandleRequests(HttpListener httpListener, ProgressBarJSON json)
+        private async Task HandleRequests(HttpListener httpListener, string folderPath)
         {
             int requestCount = 0;
 
@@ -52,13 +48,19 @@ namespace OverlayUpdater.Services
                 Console.WriteLine();
 
                 // Write the response info
-                byte[] data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(json));
-                resp.ContentType = "application/json";
-                resp.ContentEncoding = Encoding.UTF8;
-                resp.ContentLength64 = data.LongLength;
+                var fullpath = GetLocalpath(folderPath, req.Url.AbsolutePath);
+                try {
+                    byte[] data = await File.ReadAllBytesAsync(fullpath);
+                    resp.ContentType = GetContentType(fullpath);
+                    resp.ContentLength64 = data.LongLength;
 
-                // Write out to the response stream (asynchronously), then close it
-                await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                    // Write out to the response stream (asynchronously), then close it
+                    await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                } catch(Exception)
+                {
+                    resp.StatusCode = 404;
+                }
+                
                 resp.Close();
             }
         }
@@ -67,6 +69,23 @@ namespace OverlayUpdater.Services
         {
             Console.WriteLine("Shutdown requested");
             shutdown = true;
+        }
+
+        private string GetLocalpath(string folderPath, string requestPath)
+        {
+            var relativePath = requestPath.TrimStart('/').Replace('/', '\\');
+            var fullpath = Path.Combine(folderPath,relativePath);
+            return fullpath;
+        }
+
+        private string GetContentType(string filepath)
+        {
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(filepath, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+            return contentType;
         }
     }
 }

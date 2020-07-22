@@ -1,11 +1,9 @@
-﻿using Avalonia.Controls;
-using OverlayUpdater.Models;
+﻿using OverlayUpdater.Models;
 using OverlayUpdater.Services;
 using ReactiveUI;
 using System;
-using System.Collections.Generic;
 using System.Reactive;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OverlayUpdater.ViewModels
@@ -18,17 +16,35 @@ namespace OverlayUpdater.ViewModels
 
         public MainWindowViewModel()
         {
-            SelectClickCommand = ReactiveCommand.CreateFromTask(ClickCommand);
+            SelectFolderClickCommand = ReactiveCommand.CreateFromTask(SelectFolderCommand);
+            StartServerCommand = ReactiveCommand.CreateFromTask(StartCommand);
+            StopServerCommand = ReactiveCommand.Create(StopCommand);
         }
 
-        public ReactiveCommand<Unit,Unit> SelectClickCommand { get; }
-        public Func<Task<string>> JSONFilePickHandler;
+        public ReactiveCommand<Unit,Unit> SelectFolderClickCommand { get; }
+        public ReactiveCommand<Unit, Unit> StartServerCommand { get; }
+        public ReactiveCommand<Unit, Unit> StopServerCommand { get; }
+        public Func<Task<string>> OverlayFolderPickHandler;
 
-        private string jsonPath;
-        public string JsonPath
+        private bool enableStartServerButton;
+        public bool EnableStartServerButton
         {
-            get => jsonPath;
-            set => this.RaiseAndSetIfChanged(ref jsonPath, value);
+            get => enableStartServerButton;
+            set => this.RaiseAndSetIfChanged(ref enableStartServerButton, value);
+        }
+
+        private bool enableStopServerButton;
+        public bool EnableStopServerButton
+        {
+            get => enableStopServerButton;
+            set => this.RaiseAndSetIfChanged(ref enableStopServerButton, value);
+        }
+
+        private string folderPath;
+        public string FolderPath
+        {
+            get => folderPath;
+            set => this.RaiseAndSetIfChanged(ref folderPath, value);
         }
 
         private string title;
@@ -79,36 +95,51 @@ namespace OverlayUpdater.ViewModels
             }
         }
 
-        public async Task ClickCommand()
+        public async Task SelectFolderCommand()
         {
-            await SetJSONFile();
+            await SetOverlayFolder();
             var model = await ReadJSONFile();
             if (model == null)
                 return;
             UpdateValues(model);
-            StartServer();
+            UpdateServerButtons();
         }
 
-        private void StartServer()
+        public async Task StartCommand()
         {
-            var task = webService.Start(json);
+            var task = webService.Start(folderPath);
+            Thread.Sleep(5);
+            UpdateServerButtons();
+            return;
         }
 
-        public async Task SetJSONFile()
+        public void StopCommand()
         {
-            if (JSONFilePickHandler == null)
+            webService.Shutdown();
+            UpdateServerButtons();
+        }
+
+        public async Task SetOverlayFolder()
+        {
+            if (OverlayFolderPickHandler == null)
                 return;
 
-            var filepath = await JSONFilePickHandler();
-            JsonPath = filepath;
+            var folderPath = await OverlayFolderPickHandler();
+            FolderPath = folderPath;
         }
 
         public async Task<ProgressBarJSON> ReadJSONFile()
         {
-            if (string.IsNullOrEmpty(JsonPath))
+            if (string.IsNullOrEmpty(FolderPath))
                 return null;
 
-            return await fileService.ReadFile(JsonPath);
+            return await fileService.ReadFile(FolderPath);
+        }
+
+        public void UpdateServerButtons()
+        {
+            EnableStartServerButton = !string.IsNullOrEmpty(FolderPath) && !webService.ServerRunning;
+            EnableStopServerButton = !string.IsNullOrEmpty(FolderPath) && webService.ServerRunning;
         }
 
         public void UpdateValues(ProgressBarJSON json)
@@ -122,27 +153,27 @@ namespace OverlayUpdater.ViewModels
 
         public bool JSONNeedsSync()
         {
-            return this.json.Title != title ||
-                    this.json.Subtitle != subtitle ||
-                    this.json.Max != max ||
-                    this.json.Current != current;
+            return json.Title != title ||
+                    json.Subtitle != subtitle ||
+                    json.Max != max ||
+                    json.Current != current;
         }
 
         public void SyncJSON(ProgressBarJSON json) => SyncJSON(json.Title, json.Subtitle, json.Max, json.Current);
         public void SyncJSON(string title, string subtitle, uint max, uint current)
         {
-            this.json.Title = title;
-            this.json.Subtitle = subtitle;
-            this.json.Max = max;
-            this.json.Current = current;
+            json.Title = title;
+            json.Subtitle = subtitle;
+            json.Max = max;
+            json.Current = current;
         }
 
         public void SyncAndWriteJSON()
         {
             SyncJSON(title, subtitle, max, current);
-            if (string.IsNullOrEmpty(JsonPath))
+            if (string.IsNullOrEmpty(FolderPath))
                 return;
-            var task = fileService.WriteFile(JsonPath, json);
+            var task = fileService.WriteFile(FolderPath, json);
         }
     }
 }

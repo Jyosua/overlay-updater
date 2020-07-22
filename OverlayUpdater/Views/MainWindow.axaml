@@ -3,20 +3,21 @@
         xmlns:vm="clr-namespace:OverlayUpdater.ViewModels;assembly=OverlayUpdater"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="246"
         x:Class="OverlayUpdater.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="OverlayUpdater"
         Width="400"
-        Height="200">
+        Height="246">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
+  <StackPanel>
     <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Margin="4 4 4 0">
-      <Button Margin="4" Command="{Binding SelectClickCommand}" Grid.Column="0" Grid.Row="0">Select JSON File</Button>
-      <TextBox Margin="4" Text="{Binding JsonPath}" Grid.Column="1" Grid.Row="0"  IsReadOnly="True" />
+      <Button Margin="4" Command="{Binding SelectFolderClickCommand}" Grid.Column="0" Grid.Row="0">Select Folder</Button>
+      <TextBox Margin="4" Text="{Binding FolderPath}" Grid.Column="1" Grid.Row="0"  IsReadOnly="True" />
       <TextBlock Margin="4" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">Title:</TextBlock>
       <TextBox Margin="4" Text="{Binding Title}" Grid.Column="1" Grid.Row="1" />
       <TextBlock Margin="4" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">Subtitle:</TextBlock>
@@ -26,5 +27,11 @@
       <TextBlock Margin="4" Grid.Column="0" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center">Current:</TextBlock>
       <NumericUpDown Margin="4" Value="{Binding Current}" Grid.Column="1" Grid.Row="4" Minimum="0" />
     </Grid>
+    <Grid ColumnDefinitions="*,110,*,110,*" RowDefinitions="Auto,Auto" Margin="4 0 4 0">
+      <Button Margin="4" Command="{Binding StartServerCommand}" IsEnabled="{Binding EnableStartServerButton}" Grid.Column="1" Grid.Row="0">Start Server</Button>
+      <Button Margin="4" Command="{Binding StopServerCommand}" IsEnabled="{Binding EnableStopServerButton}" Grid.Column="3" Grid.Row="0">Stop Server</Button>
+      <TextBlock Margin="4" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">Overlays Served at: http://localhost:8017</TextBlock>
+    </Grid>
+  </StackPanel>
     
 </Window>

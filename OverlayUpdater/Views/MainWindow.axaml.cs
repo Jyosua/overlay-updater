@@ -25,25 +25,15 @@ namespace OverlayUpdater.Views
 
         private void DataContextChangeHandler(object sender, EventArgs wat)
         {
-            var vm = this.DataContext as MainWindowViewModel;
+            var vm = DataContext as MainWindowViewModel;
             if (vm != null)
-                vm.JSONFilePickHandler = PickJSONFile;
+                vm.OverlayFolderPickHandler = OpenFolderHandler;
         }
 
-        private async Task<string> PickJSONFile()
+        private async Task<string> OpenFolderHandler()
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.AllowMultiple = false;
-            dialog.Filters.Add(new FileDialogFilter() { Name = "JSON", Extensions = { "json" } });
-
-            string[] result = await dialog.ShowAsync(this);
-
-            if (result != null)
-            {
-                return result[0];
-            }
-
-            return null;
+            var dialog = new OpenFolderDialog();
+            return await dialog.ShowAsync(this);
         }
     }
 }
