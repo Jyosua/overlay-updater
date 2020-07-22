@@ -1,0 +1,3 @@
+[submodule "New folder"]
+	path = New folder
+	url = https://github.com/Jyosua/progress-bar-overlay.git
